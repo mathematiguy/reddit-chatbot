@@ -26,6 +26,7 @@ class RedditCommentsPipeline(object):
         if response.status != 200:
             # Error happened, return item.
             logger.debug("Bad response %s for item %s", response, item)
+            return item
 
         # Save screenshot to file, filename will be hash of url.
         url = item["file_urls"]

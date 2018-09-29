@@ -52,7 +52,12 @@ class DownloadSpider(scrapy.Spider):
             if download_regex.match(url):
                 file_name = url.rsplit("/", 1)[-1]
                 file_path = os.path.join("data", file_name)
-                file_hash = hash_dict[file_name] if os.path.exists(file_path) else ""
+                try:
+                    file_hash = ""
+                    if os.path.exists(file_path):
+                        file_hash = hash_dict[file_name]
+                except KeyError:
+                    pass
                 if not os.path.exists(file_path) or file_hash != sha256(file_path):
                     logger.debug("file_url %s, file_name %s, file_hash %s", 
                                  url,          file_name,    file_hash)

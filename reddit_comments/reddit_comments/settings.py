@@ -29,8 +29,8 @@ ROBOTSTXT_OBEY = True
 # See also autothrottle settings and docs
 #DOWNLOAD_DELAY = 3
 
-# Set timeout for 2 hours
-DOWNLOAD_TIMEOUT = 7200
+# Set timeout for 6 hours
+DOWNLOAD_TIMEOUT = 21600
 
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
