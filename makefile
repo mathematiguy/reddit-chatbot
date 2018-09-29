@@ -6,6 +6,11 @@ UID ?= $(shell id -u)
 GID ?= $(shell id -g)
 INTERACT ?= 
 GIT_TAG ?= $(shell git log --oneline | head -n1 | awk '{print $$1}')
+LOG_LEVEL ?= INFO
+
+crawl:
+	(cd reddit_comments && \
+		$(RUN) scrapy crawl download -s JOBDIR=crawls --loglevel $(LOG_LEVEL))
 
 .PHONY: docker
 docker:
