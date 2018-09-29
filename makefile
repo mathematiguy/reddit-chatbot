@@ -6,16 +6,25 @@ UID ?= $(shell id -u)
 GID ?= $(shell id -g)
 INTERACT ?= 
 GIT_TAG ?= $(shell git log --oneline | head -n1 | awk '{print $$1}')
-LOG_LEVEL ?= INFO
 
+LOG_LEVEL ?= INFO
+LOG_FILE ?= logs/reddit_comments-$(shell date "+%Y.%m.%d-%H.%M.%S").log
 crawl:
 	(cd reddit_comments && \
-		$(RUN) scrapy crawl download -s JOBDIR=crawls --loglevel $(LOG_LEVEL))
+		$(RUN) scrapy crawl download \
+			-s JOBDIR=crawls \
+			--loglevel $(LOG_LEVEL) | \
+			tee $(LOG_FILE))
 
 .PHONY: docker
 docker:
 	docker build --tag $(IMAGE):$(GIT_TAG) .
 	docker tag $(IMAGE):$(GIT_TAG) $(IMAGE):latest
+
+.PHONY: docker-push
+docker-push:
+	docker push $(IMAGE):$(GIT_TAG) && \
+	docker push $(IMAGE):latest
 
 .PHONY: enter
 enter: INTERACT=-it

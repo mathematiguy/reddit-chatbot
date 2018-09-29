@@ -58,6 +58,7 @@ class DownloadSpider(scrapy.Spider):
                                  url,          file_name,    file_hash)
                     yield {
                     	'file_urls': response.urljoin(url),
+                        'file_name': file_name,
                     	'sha256': file_hash 
                     }
                 else:

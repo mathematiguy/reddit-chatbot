@@ -16,6 +16,8 @@ class RedditCommentsPipeline(object):
 
     def process_item(self, item, spider):
         file_url = item["file_urls"]
+        file_name = item["file_name"]
+        logger.info("Downloading %s", file_name)
         request = scrapy.Request(file_url)
         dfd = spider.crawler.engine.download(request, spider)
         dfd.addBoth(self.return_item, item)
@@ -27,14 +29,13 @@ class RedditCommentsPipeline(object):
 
         # Save screenshot to file, filename will be hash of url.
         url = item["file_urls"]
-        sha256 = item["sha256"]
+        file_hash = item["sha256"]
         file_name = url.rsplit("/", 1)[-1]
         file_path = os.path.join("data", file_name)
         logger.debug(
             "url: %s file_name: %s sha256: %s file_path",
-            url, file_name, sha256, file_path)
-
-        if not os.path.exists(file_path) or sha256 != sha256(file_path):
-            with open(file_path, "wb") as f:
-                f.write(response.body)
-            logger.info("Finished downloading %s", file_path)
+            url, file_name, file_hash, file_path)
+        
+        with open(file_path, "wb") as f:
+            f.write(response.body)
+        logger.info("Finished downloading %s", file_path)
