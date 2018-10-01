@@ -5,30 +5,30 @@ import requests
 import hashlib
 import scrapy
 import logging
+from utils import sha256, multicore_apply
 
 logger = logging.getLogger()
 
-def get_hashes(hash_url):
+def get_sha_hashes(hash_url):
     response = requests.get(hash_url)
+    hash_dict = {}
     with open("data/sha256sum.txt", "w") as f:
         logger.debug("Writing sha256sum.txt to disk")
-        f.write(response.text)
-    logger.info("sha256sum.txt saved to disk")
-
-def get_hash_dict():
-    hash_dict = {}
-    with open("data/sha256sum.txt") as f:
-        for line in f.read().strip().split("\n"):
+        for line in response.text.strip().split("\n"):
             sha256, filename = re.split("\s+", line, 1)
             hash_dict[filename] = sha256
+            f.write(line + "\n")
+    logger.info("sha256sum.txt saved to disk")
     return hash_dict
 
-def sha256(filepath):
-    hash_sha256 = hashlib.sha256()
-    with open(filepath, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_sha256.update(chunk)
-    return hash_sha256.hexdigest()
+def get_file_hashes():
+    '''
+    Build dict of sha256 sums of currently downloaded files
+    '''
+    zip_files = [os.path.join("data", f) for f in os.listdir("data") if f.endswith(".xz") or f.endswith(".bz2")]
+    zip_hashes = multicore_apply(zip_files, sha256)
+    zip_names = [f.rsplit("/", 1)[-1] for f in zip_files]
+    return dict(zip(zip_names, zip_hashes))
 
 class DownloadSpider(scrapy.Spider):
     name = 'download'
@@ -40,12 +40,10 @@ class DownloadSpider(scrapy.Spider):
         download_regex = re.compile("\./RC_[0-9]{4}-[0-9]{2}\.[bz2|xz]")
         
         # Start by downloading the hash file
-        # Set priority so this downloads first
-        logger.debug("Getting hashes..")
-        get_hashes(
-            response.urljoin('sha256sum.txt')
-            )
-        hash_dict = get_hash_dict()
+        sha_hashes = get_sha_hashes(response.urljoin("sha256sum.txt"))
+
+        # Hash the local files
+        file_hashes = get_file_hashes()
 
         # Then start downloading the other files
         for url in download_urls:
@@ -55,16 +53,18 @@ class DownloadSpider(scrapy.Spider):
                 try:
                     file_hash = ""
                     if os.path.exists(file_path):
-                        file_hash = hash_dict[file_name]
+                        sha_hash  = sha_hashes[file_name]
+                        file_hash = file_hashes[file_name]
                 except KeyError:
-                    pass
-                if not os.path.exists(file_path) or file_hash != sha256(file_path):
-                    logger.debug("file_url %s, file_name %s, file_hash %s", 
-                                 url,          file_name,    file_hash)
+                    sha_hash = "missing"
+                    logger.info("%s has no hash recorded in sha256sum.txt", file_name)
+                if not os.path.exists(file_path) or sha_hash != file_hash:
+                    logger.debug("file_url %s, file_name %s, sha_hash %s", 
+                                 url,          file_name,    sha_hash)
                     yield {
                     	'file_urls': response.urljoin(url),
                         'file_name': file_name,
-                    	'sha256': file_hash 
-                    }
+                    	'sha256': sha_hash 
+                        }
                 else:
                     logger.info("Skipped %s due to matching hash", file_name)
