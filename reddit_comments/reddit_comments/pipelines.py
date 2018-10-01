@@ -19,13 +19,14 @@ class RedditCommentsPipeline(object):
         file_name = item["file_name"]
         logger.info("Downloading %s", file_name)
         request = scrapy.Request(file_url)
+        request.meta['max_retry_times'] = 10
         dfd = spider.crawler.engine.download(request, spider)
         dfd.addBoth(self.return_item, item)
 
     def return_item(self, response, item):
         if response.status != 200:
             # Error happened, return item.
-            logger.debug("Bad response %s for item %s", response, item)
+            logger.info("Bad response %s for item %s", response.status, item['file_name'])
             return item
 
         # Save screenshot to file, filename will be hash of url.
