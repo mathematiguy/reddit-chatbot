@@ -6,15 +6,15 @@ UID ?= $(shell id -u)
 GID ?= $(shell id -g)
 INTERACT ?= 
 GIT_TAG ?= $(shell git log --oneline | head -n1 | awk '{print $$1}')
+TIMESTAMP := $(shell date "+%Y%m%d-%H%M%S")
 
 LOG_LEVEL ?= INFO
-LOG_FILE ?= logs/reddit_comments-$(shell date "+%Y.%m.%d-%H.%M.%S").log
 crawl:
 	(cd reddit_comments && \
 		$(RUN) scrapy crawl download \
 			-s JOBDIR=crawls \
 			--loglevel $(LOG_LEVEL) | \
-			tee $(LOG_FILE))
+			tee logs/reddit_comments-$(TIMESTAMP).log)
 
 .PHONY: docker
 docker:
