@@ -1,5 +1,5 @@
 DOCKER_REGISTRY := mathematiguy
-IMAGE_NAME := minimal-project
+IMAGE_NAME := reddit-comments
 IMAGE := $(DOCKER_REGISTRY)/$(IMAGE_NAME)
 RUN ?= docker run $(INTERACT) --rm -v $$(pwd):/work -w /work -u $(UID):$(GID) $(IMAGE)
 UID ?= $(shell id -u)
@@ -7,8 +7,15 @@ GID ?= $(shell id -g)
 INTERACT ?= 
 GIT_TAG ?= $(shell git log --oneline | head -n1 | awk '{print $$1}')
 TIMESTAMP := $(shell date "+%Y%m%d-%H%M%S")
-
 LOG_LEVEL ?= INFO
+LIMIT ?= -1
+
+download: scripts/download.py
+	$(RUN) python3 $< \
+		--output-dir reddit_comments/data \
+		--limit $(LIMIT) \
+		--log-level $(LOG_LEVEL)
+
 crawl:
 	(cd reddit_comments && \
 		$(RUN) scrapy crawl download \
