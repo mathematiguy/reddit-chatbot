@@ -43,14 +43,6 @@ def get_file_hashes(file_dir, limit):
     return dict(zip(zip_names, zip_hashes))
 
 
-def check_file_hash(file, file_hashes):
-    try:
-        file_hash = file_hashes[file]
-    except KeyError:
-        file_hash = ''
-    return file_hash
-
-
 def wget_reddit_comments(url, output_path):
     cmd = ['wget', '--progress=dot:giga', url, '-O', output_path]
     log.info("Running: %s", " ".join(cmd))
@@ -94,7 +86,7 @@ def main():
     for file in file_list:
         target_path = os.path.join(args.output_dir, file)
         sha_hash = sha_hashes[file]
-        file_hash = check_file_hash(file, file_hashes)
+	    file_hash = file_hashes.get(file, "")
         if not os.path.exists(target_path) or sha_hash != file_hash:
             file_url = urljoin(args.base_url, file)
             output_path = os.path.join(args.output_dir, file)
