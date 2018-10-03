@@ -2,6 +2,11 @@ import time
 import hashlib
 from multiprocessing import Pool, cpu_count
 
+def md5_string(s):
+    hash_md5 = hashlib.md5()
+    hash_md5.update(s)
+    return hash_md5.hexdigest()
+
 
 def sha256(filepath):
     hash_sha256 = hashlib.sha256()

@@ -1,7 +1,7 @@
 DOCKER_REGISTRY := mathematiguy
 IMAGE_NAME := reddit-comments
 IMAGE := $(DOCKER_REGISTRY)/$(IMAGE_NAME)
-RUN ?= docker run $(INTERACT) --rm -v $$(pwd):/work -w /work -u $(UID):$(GID) $(IMAGE)
+RUN ?= docker run $(INTERACT) --rm --network host -v $$(pwd):/work -w /work -u $(UID):$(GID) $(IMAGE)
 UID ?= $(shell id -u)
 GID ?= $(shell id -g)
 INTERACT ?= 
@@ -22,6 +22,14 @@ crawl:
 			-s JOBDIR=crawls \
 			--loglevel $(LOG_LEVEL) | \
 			tee logs/reddit_comments-$(TIMESTAMP).log)
+
+build: LIMIT?=1
+build: scripts/build-database.py
+	$(RUN) python3 $< \
+		-f reddit_comments/data/sample.json \
+		--limit $(LIMIT) \
+		--log-level $(LOG_LEVEL) \
+		--from-scratch
 
 .PHONY: docker
 docker:

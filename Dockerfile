@@ -13,3 +13,7 @@ RUN pip3 install -r /root/requirements.txt
 
 # Download spacy model
 RUN python3 -m spacy download en
+
+RUN pip3 install py2neo==4.1.0
+RUN pip3 install pyyaml
+RUN pip3 install mysqlclient==1.3.13

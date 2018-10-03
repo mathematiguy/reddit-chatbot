@@ -9,6 +9,7 @@ from lxml import etree
 from urllib.parse import urljoin
 from utils import multicore_apply, sha256, timeit
 
+
 def get_file_list(base_url):
 	download_regex = re.compile("\./RC_[0-9]{4}-[0-9]{2}\.[bz2|xz]")
 	response = requests.get(base_url)
@@ -48,6 +49,7 @@ def wget_reddit_comments(url, output_path):
     log.info("Running: %s", " ".join(cmd))
     subprocess.call(cmd)
 
+
 @timeit
 def main():
     global log
@@ -57,6 +59,8 @@ def main():
     parser.add_argument('-b', '--base-url', help="The base url",
         default = "http://files.pushshift.io/reddit/comments/")
     parser.add_argument('-o', '--output-dir', help="The output directory",
+        default = None)
+    parser.add_argument('-s', '--start-from', help="Start from this particular file",
         default = None)
     parser.add_argument('--limit', help="Limit files to hash (for testing)", type = int,
         default = float('inf'))
@@ -84,13 +88,14 @@ def main():
     file_hashes = get_file_hashes(args.output_dir, limit = args.limit)
 
     for file in file_list:
-        target_path = os.path.join(args.output_dir, file)
-        sha_hash = sha_hashes[file]
-	    file_hash = file_hashes.get(file, "")
-        if not os.path.exists(target_path) or sha_hash != file_hash:
-            file_url = urljoin(args.base_url, file)
-            output_path = os.path.join(args.output_dir, file)
-            wget_reddit_comments(file_url, output_path)
+    	if args.start_from is None file >= args.start_from:
+	        target_path = os.path.join(args.output_dir, file)
+	        sha_hash = sha_hashes[file]
+		    file_hash = file_hashes.get(file, "")
+	        if not os.path.exists(target_path) or sha_hash != file_hash:
+	            file_url = urljoin(args.base_url, file)
+	            output_path = os.path.join(args.output_dir, file)
+	            wget_reddit_comments(file_url, output_path)
 
 
 if __name__ == "__main__":
